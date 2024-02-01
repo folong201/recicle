@@ -12,8 +12,8 @@ class LoginButton extends StatelessWidget {
   }
 }
 
-class SignInButton extends StatelessWidget {
-  const SignInButton({Key? key}) : super(key: key);
+class RegisterButton extends StatelessWidget {
+  const RegisterButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
