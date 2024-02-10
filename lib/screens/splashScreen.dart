@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:recicle/screens/HomeScreen.dart';
 import 'package:recicle/screens/LogonOnBoading/LoginScreen.dart';
+import 'package:recicle/services/helper_function.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -16,22 +17,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(
-      Duration(seconds: 3),
-      () => {
-        // Navigator.pushReplacement(
-        //     context,
-        //     MaterialPageRoute(builder: (context) => const HomeScreen()),
-        //   )
-        checkIfAuth()
-      },
-    );
+    setAuthStatus();
+  }
+
+  setAuthStatus() async {
+    print("verification du status");
+    HelperFunction.getUserLoggedInSharedPreference().then((value) {
+      print("valeur recupere: $value");
+      setState(() {
+        isAuth = value ?? false;
+      });
+      if (isAuth == false || isAuth == null) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      } else {
+        goToHome();
+      }
+    });
   }
 
   void goToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => HomeScreen()),
     );
   }
 
@@ -66,17 +74,5 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
-  }
-
-  checkIfAuth() async {
-    if (isAuth) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => LoginScreen()));
-    }
   }
 }

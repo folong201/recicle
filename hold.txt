@@ -1,0 +1,7 @@
+dart pub global activate flutterfire_cli
+
+
+
+met a our cette page afin d'afficher la liste ditems sachant que chaque item possede un nom une image une description, une categotie et une une icone pour la metre en boobkmark
+\
+STEP TV MOVIES CHANNEL
