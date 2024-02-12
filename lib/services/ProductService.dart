@@ -13,8 +13,7 @@ class ProductService {
   }
 
   Future getProductsByUser(uidd) {
-    return products.where('uid', isEqualTo: uidd).get()
-    .then((value) {
+    return products.where('uid', isEqualTo: uidd).get().then((value) {
       List<dynamic> products = [];
       value.docs.forEach((element) {
         products.add(element);
@@ -48,9 +47,12 @@ class ProductService {
     });
   }
 
-  Future<void> updateProduct(
-      String id, String name, String description, String imageUrl) async {
+  Future<void> updateProduct(String id, String name, String description,
+      String imageUrl, price, cate, subcate) async {
     return products.doc(id).update({
+      "category": cate,
+      "subcategory": subcate,
+      "price": price,
       'name': name,
       'description': description,
       'imageUrl': imageUrl,

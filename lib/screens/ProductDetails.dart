@@ -32,7 +32,6 @@ class _ProductDetailsState extends State<ProductDetails> {
                 itemBuilder: (BuildContext context, int index) {
                   return Image.asset(
                     "assets/images/photolcd.webp",
-                    // widget.product.images[index],
                     fit: BoxFit.cover,
                   );
                 },
@@ -44,12 +43,17 @@ class _ProductDetailsState extends State<ProductDetails> {
                 // Add your logic to open the chat screen with the owner
                 UserService.messageOwner(
                   context,
-                  widget.product.uid,
+                  widget.product['uid'],
                 );
               },
               child: const Text('Message Owner'),
             ),
-            Text(widget.product.name.toString()),
+            Text(widget.product['name'].toString()),
+            Text(widget.product['description'].toString() ?? "Unknow"),
+            // Text(widget.product.productCategory[0].toString() ?? "Unknow"),
+            // Text(widget.product.productPrice.toString() ?? "Unknow"),
+            // Text(widget.product.productSubcategory[0].toString() ?? "Unknow"),
+            // Text(widget.product.timestamp.toString() ?? "Unknow"),
           ],
         ),
       ),

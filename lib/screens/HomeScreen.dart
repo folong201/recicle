@@ -15,10 +15,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String? userEmail;
+  PageController _pageController = PageController(initialPage: 0);
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _pageController.animateToPage(
+        index,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
@@ -75,8 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         children: [
           const DefaultHome(),
           const MessageScreen(),
@@ -99,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        // selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
       ),
     );

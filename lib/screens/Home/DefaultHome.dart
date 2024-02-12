@@ -1,25 +1,8 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:recicle/widgets/Items/ItemAsGrid.dart';
 import 'package:recicle/widgets/Items/ItemsAsList.dart';
-
-class Item {
-  final String name;
-  final String image;
-  final String uid;
-  final String description;
-  final String category;
-  dynamic isBookmarked;
-
-  Item({
-    required this.name,
-    required this.image,
-    required this.description,
-    required this.category,
-    required this.uid,
-    this.isBookmarked = false,
-  });
-}
 
 class DefaultHome extends StatefulWidget {
   const DefaultHome({Key? key}) : super(key: key);
@@ -31,10 +14,64 @@ class DefaultHome extends StatefulWidget {
 class _DefaultHomeState extends State<DefaultHome> {
   List<dynamic> items = [];
   bool isGrid = false;
+
   late TextEditingController _searchController = TextEditingController();
 
   final CollectionReference products =
       FirebaseFirestore.instance.collection('products');
+  final storage = FirebaseStorage.instance;
+  Map<String, dynamic> productGalleries = {};
+  setAllProductImages() async {
+    print("recuperation des image des produits");
+
+    Map<String, dynamic> cc = {};
+    print("nombre de produits ${items.length}");
+    for (var i = 0; i < items.length; i++) {
+      var images = await getAllimagesOfProduct(items[i].id);
+      // print("nombre d'images ${images.length}");
+      cc[items[i].id] = images;
+    }
+    print("fin de recuperation des images de toute la galery des produits");
+    print("Taille ${cc.length}");
+    setState(() {
+      productGalleries = cc;
+    });
+  }
+
+ 
+
+  getAllimagesOfProduct(productId) async {
+    try {
+      final galery = await storage.ref().child(productId).listAll();
+      var all = [];
+      galery.items.forEach((element) {
+        all.add(element.fullPath);
+      });
+      print('Found ${all.length} images in folder $productId');
+      if (all.length == 0) {
+        return ["https://placehold.jp/150x150.png"];
+      } else {
+        return all;
+      }
+    } catch (error) {
+      print('Error getting images of product: $error');
+      // Handle error gracefully (e.g., display a placeholder image)
+      if (error is FirebaseException && error.code == 'object-not-found') {
+        print('Folder $productId not found, using default folder.');
+        final defaultGalery = await storage.ref().child('default').listAll();
+        var all = [];
+        defaultGalery.items.forEach((element) {
+          all.add(element.fullPath);
+        });
+        print('Found ${all.length} images in default folder.');
+        return all;
+      } else {
+        // Handle other errors
+        print('Unexpected error occurred: $error');
+        throw error; // Rethrow the error for further handling if necessary
+      }
+    }
+  }
 
   Stream<QuerySnapshot> getProducts() {
     return products.snapshots();
@@ -98,7 +135,9 @@ class _DefaultHomeState extends State<DefaultHome> {
           ),
           Expanded(
             // child: ItemAsGrid(items: items),
-            child: isGrid ? ItemAsGrid(items: items) : ItemAsList(items: items),
+            child: isGrid
+                ? ItemAsGrid(items: items, productGalleries: productGalleries)
+                : ItemAsList(items: items, productGalleries: productGalleries),
           ),
         ],
       ),
@@ -107,23 +146,12 @@ class _DefaultHomeState extends State<DefaultHome> {
 
   getAllItemFromFirebase() async {
     QuerySnapshot snapshot = await getProducts().first;
-    List<Item> fetchedItems = snapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      print(data['name']);
-      return Item(
-        name: data['name'] ?? '',
-        image: data['image'] ?? '',
-        description: data['description'] ?? '',
-        category: data['category'] ?? '',
-        uid: data['uid'] ?? '',
-        isBookmarked: false,
-      );
-    }).toList();
-
+    List<dynamic> fetchedItems = snapshot.docs;
     if (mounted) {
       setState(() {
         items = fetchedItems;
       });
     }
+    await setAllProductImages();
   }
 }
