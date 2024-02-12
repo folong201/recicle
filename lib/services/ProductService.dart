@@ -63,4 +63,8 @@ class ProductService {
   Future<void> deleteProduct(String id) async {
     return products.doc(id).delete();
   }
+
+  Future findProductByName(String name) async {
+    return await products.where('name', isEqualTo: "name").get();
+  }
 }

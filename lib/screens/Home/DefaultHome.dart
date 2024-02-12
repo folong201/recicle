@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:recicle/services/ProductService.dart';
 import 'package:recicle/widgets/Items/ItemAsGrid.dart';
 import 'package:recicle/widgets/Items/ItemsAsList.dart';
 
@@ -38,8 +39,6 @@ class _DefaultHomeState extends State<DefaultHome> {
     });
   }
 
- 
-
   getAllimagesOfProduct(productId) async {
     try {
       final galery = await storage.ref().child(productId).listAll();
@@ -49,7 +48,13 @@ class _DefaultHomeState extends State<DefaultHome> {
       });
       print('Found ${all.length} images in folder $productId');
       if (all.length == 0) {
-        return ["https://placehold.jp/150x150.png"];
+        final defaultGalery = await storage.ref().child('default').listAll();
+        var all = [];
+        defaultGalery.items.forEach((element) {
+          all.add(element.fullPath);
+        });
+        print('Found ${all.length} images in default folder.');
+        return all;
       } else {
         return all;
       }
@@ -108,6 +113,11 @@ class _DefaultHomeState extends State<DefaultHome> {
                       hintText: 'Search',
                     ),
                     onChanged: (value) {
+                      if (value.isEmpty) {
+                        getAllItemFromFirebase();
+                      } else {
+                        searchProductByName(value);
+                      }
                       // Handle search text change
                     },
                   ),
@@ -116,6 +126,7 @@ class _DefaultHomeState extends State<DefaultHome> {
                   icon: Icon(Icons.search),
                   onPressed: () {
                     String searchText = _searchController.text;
+                    searchProductByName(searchText);
                     //     // Perform search
                   },
                 ),
@@ -146,6 +157,17 @@ class _DefaultHomeState extends State<DefaultHome> {
 
   getAllItemFromFirebase() async {
     QuerySnapshot snapshot = await getProducts().first;
+    List<dynamic> fetchedItems = snapshot.docs;
+    if (mounted) {
+      setState(() {
+        items = fetchedItems;
+      });
+    }
+    await setAllProductImages();
+  }
+
+  searchProductByName(String name) async {
+    QuerySnapshot snapshot = await ProductService().findProductByName(name);
     List<dynamic> fetchedItems = snapshot.docs;
     if (mounted) {
       setState(() {
