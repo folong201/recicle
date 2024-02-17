@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:recicle/screens/Messages/MessageBox.dart';
 import 'package:recicle/services/MessageService.dart';
@@ -13,13 +14,15 @@ class MessageScreen extends StatefulWidget {
 class _MessageScreenState extends State<MessageScreen> {
   List<dynamic> conversations = [];
   bool haveGroup = true;
+  bool isLoading = true;
+  Map<String, String> groupname = {};
+  String? uid = '';
 
   @override
-  void initState() {
-    // TODO: implement initState
+  void initState() { 
     super.initState();
-    print("recuperation de la liste des groupe du user");
-    this.getAllGroup();
+    // print("recuperation de la liste des groupe du user");
+    getAllGroup();
   }
 
   @override
@@ -29,14 +32,14 @@ class _MessageScreenState extends State<MessageScreen> {
         title: const Text('Message'),
       ),
       body: Center(
-        child: !haveGroup
+        child: !haveGroup || isLoading
             ? const CircularProgressIndicator() // Show loading indicator if conversations are still loading
             : ListView.builder(
                 itemCount: conversations.length,
                 itemBuilder: (context, index) {
-                  return MessageBox(
-                    chatRoom: conversations[index],
-                  );
+                  return conversations[index] != null ? MessageBox(
+                    chatRoom: conversations[index]!,
+                  ) : Container();
                 },
               ),
       ),
@@ -44,19 +47,25 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   getAllGroup() async {
-    print("recuperation du uid");
-    String? uid = await HelperFunction.getUserUIDSharedPreference();
-    MessageService().getAllGroupsOfOneUser(uid!).then((value) {
-      if (value.length == []) {
-        print("aucun groupe trouver length 0");
+    // print("recuperation du uid");
+    String? uik = await HelperFunction.getUserUIDSharedPreference();
+    setState(() {
+      uid = uik;
+    });
+    MessageService().getAllGroupsOfOneUser(uid!).then((value) async {
+      if (value.isEmpty) { // Use isEmpty instead of comparing to []
+        // print("aucun groupe trouver length 0");
         setState(() {
-          haveGroup = !haveGroup;
+          haveGroup = false; // Update haveGroup to false
+          isLoading = false; // Update isLoading to false
         });
-      } else { 
+      } else {
+        // print("groupe trouver");
+       
         setState(() {
-          print("groupe trouver");
           conversations = value;
-        });
+          isLoading = false; // Update isLoading to false
+        }); 
       }
     });
   }

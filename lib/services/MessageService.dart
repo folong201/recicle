@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class MessageService {
   final String? uid;
@@ -20,9 +21,8 @@ class MessageService {
 
       return true;
     } catch (e) {
-      print("message non envoyé");
+      // print("message non envoyé");
 
-      print(e.toString());
       return false;
     }
   }
@@ -60,18 +60,22 @@ class MessageService {
     });
   }
 
-// Recuperer un groupe a partir de deux utilisateur ou en creer s'il n'existe pas
+  //recuperer ou creer un groupe
+
   Future<DocumentReference> getOrCreateGroup(List<String> userIds) async {
     print("recuperation de tout les groupes");
-    final groupsSnapshot = await FirebaseFirestore.instance
-        .collection('groups')
-        .where('members', arrayContainsAny: userIds)
-        .get();
-
-    if (groupsSnapshot.docs.isNotEmpty) {
+    final groupsSnapshot =
+        await FirebaseFirestore.instance.collection('groups').get();
+    final matchingGroups = groupsSnapshot.docs.where((doc) {
+      final members = List<String>.from(doc['members']);
+      members.sort();
+      final sortedUserIds = List<String>.from(userIds)..sort();
+      return listEquals(members, sortedUserIds);
+    });
+    if (matchingGroups.isNotEmpty) {
       // Groupe trouvé, retourner le premier groupe correspondant
-      print("aucun groupe trouve");
-      return groupsSnapshot.docs.first.reference;
+      print("groupe trouve");
+      return matchingGroups.first.reference;
     } else {
       //recuperer les utilisateur a traver leur id
       print("recuperation des deux participants");
@@ -87,26 +91,31 @@ class MessageService {
       var userList = [];
       for (var userDoc in userDocs) {
         if (userDoc != null) {
-          // print(
-          //     'Utilisateur : ${userDoc['name']} ${userDoc['name']}, UID : ${userDoc['uid']}}');
           userList.add(userDoc['uid']);
         } else {
           print('Utilisateur avec UID  introuvable.');
         }
       }
-
+      var groupName = userDocs[0]!['uid'] +
+          '_' +
+          userDocs[0]!['email'] +
+          ' & ' +
+          userDocs[0]!['uid'] +
+          "_" +
+          userDocs[1]!['email'];
       // Aucun groupe trouvé, créer un nouveau groupe
       return FirebaseFirestore.instance.collection('groups').add({
         'members': userList,
         'latestMessage': 'latest message here',
-        'name': 'groupe Name',
+        'name': groupName,
+        // 'users': userDocs,
       });
     }
   }
 
 //recuperer tout les groupes d'un utilisateur
   Future getAllGroupsOfOneUser(String uid) async {
-    print("Récupération de tous les groupes de l'utilisateur $uid");
+    // print("Récupération de tous les groupes de l'utilisateur $uid");
 
     // Requête Firestore pour obtenir tous les groupes où l'utilisateur est membre
     final groupsSnapshot = await FirebaseFirestore.instance
@@ -115,17 +124,27 @@ class MessageService {
 
     // Si des groupes ont été trouvés
     if (groupsSnapshot.docs.isNotEmpty) {
-      print("Liste des groupes trouvée pour $uid");
+      // print("Liste des groupes trouvée pour $uid");
       // Parcourir les documents et retourner une liste de Maps
       //boucle sur les groupes et aficher les nom et les id
       for (var group in groupsSnapshot.docs) {
-        print('Groupe : ${group['name']}, ID : ${group.id}');
+        // print('Groupe : ${group['name']}, ID : ${group.id}');
       }
       return groupsSnapshot.docs;
     } else {
-      print("Aucun groupe trouvé pour $uid");
+      // print("Aucun groupe trouvé pour $uid");
       // Retourner un tableau vide
       return [];
+    }
+  }
+
+  getGroupNameByuserId(OriginalName, authUserId) {
+    var user1 = OriginalName.split('&')[0];
+    var user2 = OriginalName.split('&')[1];
+    if (user1 == authUserId) {
+      return user1.plit('_')[1];
+    } else {
+      return user2.split('_')[1];
     }
   }
 }

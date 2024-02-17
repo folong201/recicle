@@ -30,12 +30,7 @@ class ProductService {
     productSubcategory,
     productImages,
   ) async {
-    await getProducts().first.then((value) {
-      print("recuperation des produits");
-      print(value.docs.length);
-      print(value.docs.first.id);
-    });
-    return products.add({
+    return await products.add({
       'name': productName,
       'description': productDescription,
       'imageUrl': productImages,
@@ -49,10 +44,24 @@ class ProductService {
 
   Future<void> updateProduct(String id, String name, String description,
       String imageUrl, price, cate, subcate) async {
+    //affichage de toute les valeur recus
+    // print("affichage des attributs recus");
+
+    // print("category");
+    // print(cate);
+    // print("subcate");
+    // print(subcate);
+    // print("name");
+    // print(name);
+    // print("description");
+    // print(description); 
+    // print("id");
+    // print(id);
+
     return products.doc(id).update({
-      "category": cate,
-      "subcategory": subcate,
-      "price": price,
+      "productCategory": cate,
+      "productSubcategory": subcate,
+      "productPrice": price,
       'name': name,
       'description': description,
       'imageUrl': imageUrl,
@@ -64,7 +73,7 @@ class ProductService {
     return products.doc(id).delete();
   }
 
-  Future findProductByName(String name) async {
-    return await products.where('name', isEqualTo: "name").get();
+  Future<QuerySnapshot> findProductByName(String name) async {
+    return await products.where('name', isEqualTo: name).get();
   }
 }

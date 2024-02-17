@@ -1,7 +1,8 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:recicle/screens/Home/DefaultHome.dart';
-import 'package:recicle/screens/ProductDetails.dart';
+import 'package:recicle/screens/products/ProductDetails.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ItemAsGrid extends StatefulWidget {
   final List<dynamic> items;
@@ -23,72 +24,55 @@ class _ItemAsGridState extends State<ItemAsGrid> {
       itemCount: widget.items.length,
       itemBuilder: (context, index) {
         return FutureBuilder<String>(
-            // future: getImage(
-            //     widget.productGalleries[widget.items[index].id]?.first ?? ''),
-            future:
-                widget.productGalleries[widget.items[index].id]?.isNotEmpty ==
-                        true
-                    ? getImage(
-                        widget.productGalleries[widget.items[index].id]!.first)
-                    : Future.value(''),
-            builder: (context, snapshot) {
-              // print("Gallery pour un produit");
-              // print(widget.productGalleries[widget.items[index]].toString());
-              Widget image;
-              if (snapshot.hasData) {
-                final imageUrl = snapshot.data!;
-                image = Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
+          future: getImageURL(widget.items[index].id),
+          builder: (context, snapshot) {
+            Widget image;
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              image = const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              image = Image.asset('assets/images/photolcd.webp');
+            } else {
+              final imageUrl = snapshot.data!;
+              // image = Image.network(
+              //   imageUrl,
+              //   fit: BoxFit.cover,
+              //   width: double.infinity,
+              //   height: double.infinity,
+              // );
+              image = CachedNetworkImage(
+                    fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
-                );
-              } else if (snapshot.hasError) {
-                image = Image.asset('assets/images/photolcd.webp');
-              } else {
-                image = Center(child: CircularProgressIndicator());
-              }
-              return GestureDetector(
-                child: GridTile(
-                  child: Stack(
-                    children: [
-                      image,
-                      // Positioned(
-                      //   top: 0,
-                      //   right: 0,
-                      //   child: IconButton(
-                      //     icon: Icon(
-                      //       widget.items[index].isBookmarked
-                      //           ? Icons.bookmark
-                      //           : Icons.bookmark_border,
-                      //     ),
-                      //     onPressed: () {
-                      //       setState(() {
-                      //         widget.items[index].isBookmarked = false;
-                      //         // !widget.items[index].isBookmarked;
-                      //       });
-                      //     },
-                      //   ),
-                      // ),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(widget.items[index]['name'] ?? ''),
-                            Text(widget.items[index]['description'] ?? ''),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                onTap: () {
-                  productDatails(context, widget.items[index]);
-                },
+                imageUrl: imageUrl,
+                placeholder: (context, url) => const CircularProgressIndicator(),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               );
-            });
+            }
+            return GestureDetector(
+              child: GridTile(
+                child: Stack(
+                  children: [
+                    image,
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.items[index]['name'] ?? ''),
+                          Text(widget.items[index]['description'] ?? ''),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              onTap: () {
+                productDatails(context, widget.items[index]);
+              },
+            );
+          },
+        );
       },
     );
   }
@@ -96,20 +80,31 @@ class _ItemAsGridState extends State<ItemAsGrid> {
   productDatails(context, product) {
     Navigator.push(context, MaterialPageRoute(
       builder: (context) {
-        return ProductDetails(product: product);
+        return ProductDetails(
+          product: product,
+          productGallery: widget.productGalleries[product.id],
+        );
       },
     ));
+  }
+
+  Future<String> getImageURL(String productId) async {
+    if (widget.productGalleries.containsKey(productId)) {
+      final images = widget.productGalleries[productId];
+      if (images != null && images.isNotEmpty) {
+        return getImage(images.first);
+      }
+    }
+    return 'https://placehold.jp/150x150.png';
   }
 
   Future<String> getImage(String path) async {
     try {
       final ref = FirebaseStorage.instance.ref(path);
-      final url = await ref.getDownloadURL();
-      return url;
+      return await ref.getDownloadURL();
     } catch (error) {
       print('Error getting image URL: $error');
-      // Handle error gracefully (e.g., display a placeholder image)
-      return 'https://placehold.jp/150x150.png'; // Or handle differently
+      return 'https://placehold.jp/150x150.png';
     }
   }
 }

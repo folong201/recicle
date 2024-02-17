@@ -5,17 +5,27 @@ import 'package:recicle/services/MessageService.dart';
 import 'package:recicle/services/helper_function.dart';
 
 class UserService {
-  static void messageOwner(context, String productOwner) async { 
+  static void messageOwner(context, String productOwner) async {
     String? uid = await HelperFunction.getUserUIDSharedPreference()!;
-    
-    var chatRoom = await MessageService().getOrCreateGroup([
-      (uid != null ? uid : FirebaseAuth.instance.currentUser!.uid),
-      productOwner
-    ]);
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => MessageDetailsPage(chatRoom: chatRoom)));
+    print("uid: $uid");
+    print("productOwner: $productOwner");
+    if (uid != null && productOwner != FirebaseAuth.instance.currentUser!.uid) {
+      print("requette chatroom");
+      var chatRoom =
+          await MessageService().getOrCreateGroup([uid, productOwner]);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MessageDetailsPage(chatRoom: chatRoom)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Vous ne pouvez pas envoyer de message à vous-même'),
+          duration: const Duration(seconds: 3),
+          
+        ),
+      );
+    }
   }
 
   Future<void> updateProfile(String displayName) async {

@@ -11,7 +11,9 @@ import 'package:path/path.dart' as path;
 class CreateProductDialog extends StatefulWidget {
   bool? toUpdate;
   dynamic product;
+
   CreateProductDialog({this.toUpdate, this.product});
+
   @override
   State<CreateProductDialog> createState() => _CreateProductDialogState();
 }
@@ -24,18 +26,24 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
   String productSubcategory = '';
   List<String> productImages = [];
   List<dynamic> products = [];
+  String operation = "Create Article";
   Map<String, dynamic> productGalleries = {};
   final storage = FirebaseStorage.instance;
   bool isLoading = false;
   var filepath;
   double progress = 0;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController productNameController = TextEditingController();
+  TextEditingController productPriceController = TextEditingController();
+  TextEditingController productDescriptionController = TextEditingController();
+  TextEditingController productCategoryController = TextEditingController();
+  TextEditingController productSubcategoryController = TextEditingController();
+
   Future _selectImage() async {
     final picker = ImagePicker();
     final pickedImage = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
-      // Upload the image to a server or storage
-      // Here is an example using Firebase Storage
       final File imageFile = File(pickedImage.path);
       setState(() {
         filepath = imageFile;
@@ -49,18 +57,22 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
 
   @override
   void initState() {
-    // TODO: implement initState
-    super.initState();
+    // super.initState();
+    // print("id du prosuit : ${widget.product.id}");
+    initializer();
   }
 
-  initializer() async {
-    if (widget.toUpdate == true) {
-      fusionnecat(widget.product['category'], widget.product['subcategory']);
+  initializer() {
+    if (widget.toUpdate != null && widget.toUpdate != false) {
+      fusionnecat(widget.product['productCategory'],
+          widget.product['productSubcategory']);
+      print("mis a jour des controllers");
 
       setState(() {
-        productName = widget.product['name'];
-        productPrice = widget.product['price'];
-        productDescription = widget.product['description'];
+        operation = "Update Article";
+        productNameController.text = widget.product['name'];
+        productPriceController.text = widget.product['productPrice'].toString();
+        productDescriptionController.text = widget.product['description'];
       });
     }
   }
@@ -72,57 +84,81 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
             child: CircularProgressIndicator(),
           )
         : AlertDialog(
-            title: Text('Create New Product'),
+            scrollable: true,
+            title: Text(operation),
             content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Product Name',
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: productNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Product Name',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a product name';
+                        }
+                        return null;
+                      },
                     ),
-                    onChanged: (value) {
-                      productName = value;
-                    },
-                  ),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Product Price',
+                    TextFormField(
+                      controller: productPriceController,
+                      decoration: InputDecoration(
+                        labelText: 'Product Price',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a product price';
+                        }
+                        return null;
+                      },
                     ),
-                    onChanged: (value) {
-                      productPrice = double.parse(value);
-                    },
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Product Description',
+                    TextFormField(
+                      controller: productDescriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Product Description',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a product description';
+                        }
+                        return null;
+                      },
                     ),
-                    onChanged: (value) {
-                      productDescription = value;
-                    },
-                  ),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Product Category',
+                    TextFormField(
+                      controller: productCategoryController,
+                      decoration: InputDecoration(
+                        labelText: 'Product Category',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a product category';
+                        }
+                        return null;
+                      },
                     ),
-                    onChanged: (value) {
-                      productCategory = value;
-                    },
-                  ),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Product Subcategory',
+                    TextFormField(
+                      controller: productSubcategoryController,
+                      decoration: InputDecoration(
+                        labelText: 'Product Subcategory',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a product subcategory';
+                        }
+                        return null;
+                      },
                     ),
-                    onChanged: (value) {
-                      productSubcategory = value;
-                    },
-                  ),
-                  ElevatedButton(
-                    child: Text('Add Image'),
-                    onPressed: _selectImage,
-                  ),
-                ],
+                    ElevatedButton(
+                      child: Text('Add Image'),
+                      onPressed: _selectImage,
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: <Widget>[
@@ -133,8 +169,22 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                 },
               ),
               TextButton(
-                child: Text('Create'),
-                onPressed: saveProduct,
+                child: Text('Save'),
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    if (widget.toUpdate != null && widget.toUpdate == true) {
+                      _updateProduct();
+                    } else {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await saveProduct();
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  }
+                },
               ),
             ],
           );
@@ -146,47 +196,37 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
   }
 
   saveProduct() async {
-    setState(() {
-      isLoading = true;
-    });
     print("product creation");
-    if (productName.isEmpty ||
-        productPrice == 0.0 ||
-        productDescription.isEmpty ||
-        productCategory.isEmpty ||
-        productSubcategory.isEmpty) {
+    if (!_formKey.currentState!.validate()) {
+      print("probleme de validation");
       setState(() {
         isLoading = false;
       });
     } else {
-      if (widget.toUpdate==true ) {
-        _updateProduct();
-      } else {
-        ProductService(uid: FirebaseAuth.instance.currentUser?.uid!)
-            .addProduct(
-          productName,
-          productPrice,
-          productDescription,
-          setCategory(productCategory),
-          setCategory(productSubcategory),
-          'assets/images/photolcd.webp',
-        )
-            .then((value) {
-          print("produit creer avec succes");
-          print(value.id);
-          if (filepath != null) {
-            print("uploading de l'image");
-            uploadImage(value.id);
-            Navigator.of(context).pop();
-          } else {
-            print("fichier a uploader null");
-            Navigator.of(context).pop();
-          }
-          setState(() {
-            isLoading = false;
-          });
-        });
-      }
+      print("creation du produit");
+      setState(() {
+        isLoading = true;
+      });
+      await ProductService(uid: FirebaseAuth.instance.currentUser?.uid!)
+          .addProduct(
+        productNameController.text,
+        productPriceController.text,
+        productDescriptionController.text,
+        setCategory(productCategoryController.text),
+        setCategory(productSubcategoryController.text),
+        'assets/images/photolcd.webp',
+      )
+          .then((value) {
+        print("produit creer avec succes");
+        print(value.id);
+        if (filepath != null) {
+          print("uploading de l'image");
+          uploadImage(value.id);
+        } else {
+          print("fichier a uploader null");
+        }
+        Navigator.of(context).pop();
+      });
     }
   }
 
@@ -230,16 +270,18 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
     });
     ProductService(uid: FirebaseAuth.instance.currentUser?.uid!)
         .updateProduct(
-      widget.product['id'],
-      productName,
-      productDescription,
-      'assets/images/photolcd.webp',
-      productPrice.toString(),
-      setCategory(productCategory),
-      setCategory(productSubcategory),
+      widget.product.id,
+      productNameController.text, // Nouveau nom du produit
+      productDescriptionController.text, // Nouvelle description du produit
+      'assets/images/photolcd.webp', // Nouvelle image du produit
+      productPriceController.text, // Nouveau prix du produit
+      setCategory(
+          productCategoryController.text), // Nouvelle catégorie du produit
+      setCategory(productSubcategoryController
+          .text), // Nouvelle sous-catégorie du produit
     )
         .then((value) {
-      print("produit Mis A Jour avec succes");
+      print("Produit mis à jour avec succès");
       setState(() {
         isLoading = false;
       });

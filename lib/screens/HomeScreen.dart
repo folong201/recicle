@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:recicle/screens/Home/DefaultHome.dart";
 import "package:recicle/screens/Home/MessageScreen.dart";
+import 'package:recicle/screens/Home/Dashboard.dart';
 import "package:recicle/screens/Home/Settings.dart";
 import "package:recicle/services/Auth_Services.dart";
 import "package:recicle/services/helper_function.dart";
@@ -15,14 +16,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String? userEmail;
-  PageController _pageController = PageController(initialPage: 0);
+  final PageController _pageController = PageController(initialPage: 0);
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
       _pageController.animateToPage(
         index,
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     });
@@ -30,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     setParams();
   }
@@ -47,32 +47,44 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.black,
               ),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage('URL_DE_L_IMAGE'),
+                    radius: 49,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "userEmail",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(
+              selectedColor: Colors.blue,
               title: Text(userEmail ?? "No email found"),
               onTap: () {
                 // TODO: Add functionality for Item 1
               },
             ),
             ListTile(
-              title: Text('Item 2'),
+              selectedColor: Colors.blue,
+              title: Text('Edit Profile'),
               onTap: () {
-                // TODO: Add functionality for Item 2
+                Navigator.pushNamed(context, "/editProfile");
               },
             ),
             ListTile(
-              title: Text('Logout'),
+              selectedColor: Colors.blue,
+              title: const Text('Logout'),
               onTap: () {
                 AuthService().signOut();
                 Navigator.pushNamed(context, "/login");
@@ -92,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const DefaultHome(),
           const MessageScreen(),
           Dashboard(),
+          // const SettingsScreen()
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -108,6 +121,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.dashboard),
             label: 'dashboard',
           ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: 'Settings',
+          // ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

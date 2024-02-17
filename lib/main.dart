@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
+import 'package:recicle/screens/Home/Settings.dart';
 import 'package:recicle/screens/HomeScreen.dart';
 import 'package:recicle/screens/LogonOnBoading/LoginScreen.dart';
 import 'package:recicle/screens/LogonOnBoading/RegisterScreens.dart';
@@ -34,10 +35,12 @@ void main() async {
   //   // 4. App Attest provider with fallback to Device Check provider (App Attest provider is only available on iOS 14.0+, macOS 14.0+)
   //   appleProvider: AppleProvider.appAttest,
   // );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -65,8 +68,9 @@ class MyApp extends StatelessWidget {
         '/home': (context) => HomeScreen(),
         '/register': (context) => RegisterScreen(),
         '/login': (context) => LoginScreen(),
-        '/resetpassword': (context) => ResetPasswordScreen(),
-        '/resetpasswordok': (context) => ResetEmailOk(),
+        '/resetpassword': (context) => const ResetPasswordScreen(),
+        '/resetpasswordok': (context) => const ResetEmailOk(),
+        '/editProfile': (context) => const SettingsScreen()
       },
       debugShowCheckedModeBanner: false,
     );

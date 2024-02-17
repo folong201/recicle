@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 
 class ResetEmailOk extends StatelessWidget {
@@ -17,37 +18,34 @@ class ResetEmailOk extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        child: Container(
-          // color: Colors.red,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
-            child: Column(
-              children: [
-                Image.asset(
-                  "assets/images/emailsent.png",
-                  height: 100,
-                  width: 100,
-                  // color: Colors.red,
-                ),
-                const SizedBox(height: 50),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      // primary: Colors.black87,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32.0),
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
+          child: Column(
+            children: [
+              Image.asset(
+                "assets/images/emailsent.png",
+                height: 100,
+                width: 100,
+                // color: Colors.red,
+              ),
+              const SizedBox(height: 50),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    // primary: Colors.black87,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32.0),
                     ),
-                    child: const Text('Se Connecter.'),
                   ),
+                  child: const Text('Se Connecter.'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

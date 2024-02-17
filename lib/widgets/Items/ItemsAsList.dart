@@ -1,12 +1,11 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:recicle/screens/Home/DefaultHome.dart';
-import 'package:recicle/screens/ProductDetails.dart';
+import 'package:recicle/screens/products/ProductDetails.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ItemAsList extends StatefulWidget {
   final List<dynamic> items;
-
-  Map<String, dynamic> productGalleries;
+  final Map<String, dynamic> productGalleries;
   ItemAsList({required this.items, required this.productGalleries});
 
   @override
@@ -14,78 +13,83 @@ class ItemAsList extends StatefulWidget {
 }
 
 class _ItemAsListState extends State<ItemAsList> {
-  final storage = FirebaseStorage.instance;
-
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: widget.items.length,
       itemBuilder: (context, index) {
         return FutureBuilder<String>(
-            // future: getImage(
-            //     widget.productGalleries[widget.items[index].id]?.first ?? ''),
-            future:
-                widget.productGalleries[widget.items[index].id]?.isNotEmpty ==
-                        true
-                    ? getImage(
-                        widget.productGalleries[widget.items[index].id]!.first)
-                    : Future.value(''),
-            builder: (context, snapshot) { 
-              Widget image;
-              if (snapshot.hasData) {
-                final imageUrl = snapshot.data!;
-                image = Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                );
-              } else if (snapshot.hasError) {
-                image = Image.asset('assets/images/photolcd.webp');
-              } else {
-                image = Center(child: CircularProgressIndicator());
-              }
+          future: getImageURL(widget.items[index].id),
+          builder: (context, snapshot) {
+            Widget image;
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              image = const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              image = Image.asset('assets/images/photolcd.webp');
+            } else {
+              final imageUrl = snapshot.data!;
+              // image = Image.network(
+              //   imageUrl,
+              //   fit: BoxFit.cover,
+              //   width: double.infinity,
+              //   height: double.infinity,
+              // );
 
-              return GestureDetector(
-                child: ListTile(
-                  leading: Container(
-                    width: 50.0, // Adjust width as needed
-                    child: image,
-                  ),
-                  title: Text(widget.items[index]['name'] + index.toString()),
-                  // subtitle: Text(
-                  //     (widget.items[index]['description'] ?? "descrip") +
-                  //             productGalleries[widget.items[index].id]
-                  //                 ?.first
-                  //                 .toString() ??
-                  //         'img'),
-                ),
-                onTap: () {
-                  productDatails(context, widget.items[index]);
-                },
+              image = CachedNetworkImage(
+                imageUrl: imageUrl,
+                placeholder: (context, url) => CircularProgressIndicator(),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               );
-            });
+            }
+            return GestureDetector(
+              child: ListTile(
+                leading: Container(
+                  width: 50.0, // Adjust width as needed
+                  child: image,
+                ),
+                title: Text(widget.items[index]['name'].toString()),
+              ),
+              onTap: () {
+                productDetails(context, widget.items[index]);
+              },
+            );
+          },
+        );
       },
     );
   }
 
-  productDatails(context, product) {
-    Navigator.push(context, MaterialPageRoute(
-      builder: (context) {
-        return ProductDetails(product: product);
-      },
-    ));
+  Future<String> getImageURL(String productId) async {
+    if (widget.productGalleries.containsKey(productId)) {
+      final images = widget.productGalleries[productId];
+      if (images != null && images.isNotEmpty) {
+        return getImage(images.first);
+      }
+    }
+    return 'https://placehold.jp/150x150.png';
   }
 
   Future<String> getImage(String path) async {
     try {
       final ref = FirebaseStorage.instance.ref(path);
-      final url = await ref.getDownloadURL();
-      return url;
+      return await ref.getDownloadURL();
     } catch (error) {
       print('Error getting image URL: $error');
-      // Handle error gracefully (e.g., display a placeholder image)
-      return 'https://placehold.jp/150x150.png'; // Or handle differently
+      return 'https://placehold.jp/150x150.png';
     }
+  }
+
+  void productDetails(BuildContext context, dynamic product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetails(
+            product: product,
+            productGallery: widget.productGalleries[product.id]),
+      ),
+    );
   }
 }

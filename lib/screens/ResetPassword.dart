@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:recicle/services/Auth_Services.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -8,6 +9,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final TextEditingController emailController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,9 +28,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             padding: const EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
             child: Column(
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Text(
+                    Text(
                       "Reset Password",
                       style: TextStyle(
                         color: Colors.black87,
@@ -39,9 +41,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Row(
+                const Row(
                   children: [
-                    const Text(
+                    Text(
                       "Enter votre Email",
                       style: TextStyle(
                         color: Colors.black45,
@@ -53,6 +55,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 50),
                 TextFormField(
+                  controller: emailController,
                   decoration: const InputDecoration(
                     labelText: "Email",
                     labelStyle: TextStyle(
@@ -72,7 +75,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      await AuthService().resetPassword(emailController.text);
+                      // ignore: use_build_context_synchronously
                       Navigator.pushNamed(context, '/resetpasswordok');
                     },
                     child: const Text('Reset Password'),
@@ -92,6 +97,4 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       ),
     );
   }
-
-  ResetPasswordMesage() async {}
 }

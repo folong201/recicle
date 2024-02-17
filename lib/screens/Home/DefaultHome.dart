@@ -1,10 +1,14 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:recicle/services/ProductService.dart';
 import 'package:recicle/widgets/Items/ItemAsGrid.dart';
 import 'package:recicle/widgets/Items/ItemsAsList.dart';
 
+// CachedNetworkImage(
+//   imageUrl: "http://via.placeholder.com/350x150",
+//   placeholder: (context, url) => CircularProgressIndicator(),
+//   errorWidget: (context, url, error) => Icon(Icons.error),
+// ),
 class DefaultHome extends StatefulWidget {
   const DefaultHome({Key? key}) : super(key: key);
 
@@ -14,7 +18,8 @@ class DefaultHome extends StatefulWidget {
 
 class _DefaultHomeState extends State<DefaultHome> {
   List<dynamic> items = [];
-  bool isGrid = false;
+  bool isGrid = true;
+  bool isLoading = true; // Added to track loading state
 
   late TextEditingController _searchController = TextEditingController();
 
@@ -22,17 +27,18 @@ class _DefaultHomeState extends State<DefaultHome> {
       FirebaseFirestore.instance.collection('products');
   final storage = FirebaseStorage.instance;
   Map<String, dynamic> productGalleries = {};
+
   setAllProductImages() async {
-    print("recuperation des image des produits");
+    // print("recuperation des image des produits");
 
     Map<String, dynamic> cc = {};
-    print("nombre de produits ${items.length}");
+    // print("nombre de produits ${items.length}");
     for (var i = 0; i < items.length; i++) {
       var images = await getAllimagesOfProduct(items[i].id);
       // print("nombre d'images ${images.length}");
       cc[items[i].id] = images;
     }
-    print("fin de recuperation des images de toute la galery des produits");
+    // print("fin de recuperation des images de toute la galery des produits");
     print("Taille ${cc.length}");
     setState(() {
       productGalleries = cc;
@@ -46,33 +52,33 @@ class _DefaultHomeState extends State<DefaultHome> {
       galery.items.forEach((element) {
         all.add(element.fullPath);
       });
-      print('Found ${all.length} images in folder $productId');
-      if (all.length == 0) {
+      // print('Found ${all.length} images in folder $productId');
+      if (all.isEmpty) {
         final defaultGalery = await storage.ref().child('default').listAll();
         var all = [];
         defaultGalery.items.forEach((element) {
           all.add(element.fullPath);
         });
-        print('Found ${all.length} images in default folder.');
+        // print('Found ${all.length} images in default folder.');
         return all;
       } else {
         return all;
       }
     } catch (error) {
-      print('Error getting images of product: $error');
+      // print('Error getting images of product: $error');
       // Handle error gracefully (e.g., display a placeholder image)
       if (error is FirebaseException && error.code == 'object-not-found') {
-        print('Folder $productId not found, using default folder.');
+        // print('Folder $productId not found, using default folder.');
         final defaultGalery = await storage.ref().child('default').listAll();
         var all = [];
         defaultGalery.items.forEach((element) {
           all.add(element.fullPath);
         });
-        print('Found ${all.length} images in default folder.');
+        // print('Found ${all.length} images in default folder.');
         return all;
       } else {
         // Handle other errors
-        print('Unexpected error occurred: $error');
+        // print('Unexpected error occurred: $error');
         throw error; // Rethrow the error for further handling if necessary
       }
     }
@@ -107,27 +113,24 @@ class _DefaultHomeState extends State<DefaultHome> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Search',
-                      // prefixIcon: Icon(Icons.search),
                       hintText: 'Search',
                     ),
                     onChanged: (value) {
-                      if (value.isEmpty) {
+                      if (value.isEmpty || value.length < 1) {
                         getAllItemFromFirebase();
                       } else {
                         searchProductByName(value);
                       }
-                      // Handle search text change
                     },
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: () {
                     String searchText = _searchController.text;
                     searchProductByName(searchText);
-                    //     // Perform search
                   },
                 ),
                 IconButton(
@@ -145,10 +148,22 @@ class _DefaultHomeState extends State<DefaultHome> {
             ),
           ),
           Expanded(
-            // child: ItemAsGrid(items: items),
-            child: isGrid
-                ? ItemAsGrid(items: items, productGalleries: productGalleries)
-                : ItemAsList(items: items, productGalleries: productGalleries),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : items.isEmpty // Check if items list is empty
+                    ? const Center(
+                        child: Center(
+                          child: Text(
+                            'No items found',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      )
+                    : isGrid
+                        ? ItemAsGrid(
+                            items: items, productGalleries: productGalleries)
+                        : ItemAsList(
+                            items: items, productGalleries: productGalleries),
           ),
         ],
       ),
@@ -156,22 +171,33 @@ class _DefaultHomeState extends State<DefaultHome> {
   }
 
   getAllItemFromFirebase() async {
+    setState(() {
+      isLoading = true;
+    });
     QuerySnapshot snapshot = await getProducts().first;
     List<dynamic> fetchedItems = snapshot.docs;
     if (mounted) {
+      print("nombre d'element trouver ${fetchedItems.length}");
       setState(() {
         items = fetchedItems;
+        isLoading = false;
       });
     }
     await setAllProductImages();
   }
 
   searchProductByName(String name) async {
-    QuerySnapshot snapshot = await ProductService().findProductByName(name);
+    setState(() {
+      isLoading = true;
+    });
+    QuerySnapshot snapshot =
+        await products.where('name', isEqualTo: name).get();
     List<dynamic> fetchedItems = snapshot.docs;
+    // print("nombre d'element trouver ${fetchedItems.length}");
     if (mounted) {
       setState(() {
         items = fetchedItems;
+        isLoading = false;
       });
     }
     await setAllProductImages();
