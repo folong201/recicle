@@ -85,9 +85,10 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Dashboard'),
-      // ),
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        centerTitle: true,
+      ),
       body: isLoading // Show loading indicator if data is loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -108,8 +109,8 @@ class _DashboardState extends State<Dashboard> {
                             Widget image;
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              image =
-                                  const Center(child: CircularProgressIndicator());
+                              image = const Center(
+                                  child: CircularProgressIndicator());
                             } else if (snapshot.hasError) {
                               // print('Error loading image: ${snapshot.error}');
                               // Handle error gracefully (e.g., display a placeholder)
@@ -172,8 +173,7 @@ class _DashboardState extends State<Dashboard> {
                                   bottom: 02,
                                   right: 30,
                                   child: Text(
-                                    "${productGalleries[products[index].id]
-                                            .length} images",
+                                    "${productGalleries[products[index].id].length} images",
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                 ),

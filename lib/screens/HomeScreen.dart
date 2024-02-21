@@ -3,6 +3,7 @@ import "package:recicle/screens/Home/DefaultHome.dart";
 import "package:recicle/screens/Home/MessageScreen.dart";
 import 'package:recicle/screens/Home/Dashboard.dart';
 import "package:recicle/screens/Home/Settings.dart";
+import "package:recicle/screens/Nearby.dart";
 import "package:recicle/services/Auth_Services.dart";
 import "package:recicle/services/helper_function.dart";
 
@@ -47,20 +48,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.black,
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     backgroundImage: NetworkImage('URL_DE_L_IMAGE'),
                     radius: 49,
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "userEmail",
-                    style: TextStyle(
+                    userEmail ?? "No email found",
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                     ),
@@ -70,9 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               selectedColor: Colors.blue,
-              title: Text(userEmail ?? "No email found"),
+              title: Text('DashBoard'),
               onTap: () {
-                // TODO: Add functionality for Item 1
+                Navigator.pushNamed(context, "/dashboard");
               },
             ),
             ListTile(
@@ -84,7 +85,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               selectedColor: Colors.blue,
-              title: const Text('Logout'),
+              title: Text('Set Location'),
+              onTap: () {
+                Navigator.pushNamed(context, "/setlocation");
+              },
+            ),
+            ListTile(
+              
+              selectedColor: Colors.blue,
+              title: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.red),
+              ),
               onTap: () {
                 AuthService().signOut();
                 Navigator.pushNamed(context, "/login");
@@ -100,10 +112,10 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        children: [
-          const DefaultHome(),
-          const MessageScreen(),
-          Dashboard(),
+        children: const [
+          DefaultHome(),
+          MessageScreen(),
+          NearBy(),
           // const SettingsScreen()
         ],
       ),
@@ -118,8 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Messages',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'dashboard',
+            icon: Icon(Icons.map),
+            label: 'Near me',
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.settings),

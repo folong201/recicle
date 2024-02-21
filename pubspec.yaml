@@ -28,6 +28,7 @@ dependencies:
   firebase_storage: ^11.6.0
   firebase_app_check: ^0.2.1+8
   cached_network_image: ^3.3.1
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:

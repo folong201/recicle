@@ -1,10 +1,12 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:recicle/screens/Home/Dashboard.dart';
 import 'package:recicle/screens/Home/Settings.dart';
 import 'package:recicle/screens/HomeScreen.dart';
 import 'package:recicle/screens/LogonOnBoading/LoginScreen.dart';
 import 'package:recicle/screens/LogonOnBoading/RegisterScreens.dart';
 import 'package:recicle/screens/LogonOnBoading/ResetEmailOkScreen.dart';
 import 'package:recicle/screens/ResetPassword.dart';
+import 'package:recicle/screens/Setlocation.dart';
 import 'package:recicle/screens/splashScreen.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 
@@ -70,7 +72,9 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/resetpassword': (context) => const ResetPasswordScreen(),
         '/resetpasswordok': (context) => const ResetEmailOk(),
-        '/editProfile': (context) => const SettingsScreen()
+        '/editProfile': (context) => const SettingsScreen(),
+        "/setlocation": (context) => GeolocationScreen(),
+        "/dashboard": (context) => Dashboard()
       },
       debugShowCheckedModeBanner: false,
     );
